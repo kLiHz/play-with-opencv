@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
     cv::Mat pic(size, CV_8UC4);
     pic = 0;
 
-    std::string svgFile;
+    Elements elements;
 
     std::string usage =
     "./draw flower [edges=23]\n"
@@ -36,11 +36,7 @@ int main(int argc, char* argv[]) {
             n = 23;
         }
 
-        auto elements = flower({50, 50}, 900, n);
-        for (const auto& e : elements) {
-            e->drawOn(pic);
-        }
-        svgFile = toSvg(size, elements);
+        elements = flower({50, 50}, 900, n);
     } 
     else if (command == "polygon") {
         int n = 6, depth = 18;
@@ -54,21 +50,26 @@ int main(int argc, char* argv[]) {
                 }
             }
         }
-        auto elements = polygon({500, 500}, {100, 260}, n, depth, ratio);
-        for (const auto& e : elements) {
-            e->drawOn(pic);
-        }
-        svgFile = toSvg(size, elements);
+        elements = polygon({500, 500}, {100, 260}, n, depth, ratio);
+        
     }
     else {
         std::cerr << "Illegal command. Possible commands are: \n" << usage << std::endl;
         return EXIT_FAILURE;
     }
 
-    cv::imwrite(command + ".png", pic);
     std::ofstream ofs(command + ".svg");
-    ofs << svgFile;
-    ofs.close();
+    if (ofs.is_open()) {
+        svgToStream(ofs, size, elements);
+        ofs.close();
+    } else {
+        std::cerr << std::format("Unable to open {}.\n", command + ".svg");
+    }
+
+    for (const auto& e : elements) {
+        e->drawOn(pic);
+    }
+    cv::imwrite(command + ".png", pic);
 
     cv::namedWindow(command, cv::WINDOW_NORMAL);
     cv::imshow(command, pic);

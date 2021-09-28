@@ -1,3 +1,4 @@
+#include <iosfwd>
 #include <string>
 #include <format>
 #include <numeric>
@@ -38,4 +39,14 @@ inline std::string toSvg(cv::Size size, Elements v) {
         std::accumulate(begin(v), end(v), std::string(""), [](std::string s, std::shared_ptr<Element> e) {
             return std::move(s) + e->toSvgElement();
         }) + ending;
+}
+
+inline void svgToStream(std::ostream& o, cv::Size size, Elements v) {
+    std::string header = R"(<svg version="1.1" width="{}" height="{}" xmlns="http://www.w3.org/2000/svg">)";
+    std::string ending = "</svg>";
+    o << std::format(header, size.width, size.height);
+    o << std::accumulate(
+        begin(v), end(v), std::string(""), [](std::string s, std::shared_ptr<Element> e) {
+            return std::move(s) + e->toSvgElement();});
+    o << ending;
 }

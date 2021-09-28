@@ -1,7 +1,7 @@
 #include "draw.hpp"
 
 void gen_(Elements & elements, std::vector<cv::Point2d> & oldPts, int depth, double ratio) {
-    if (depth < 0) return;
+    if (depth <= 0) return;
     auto n = oldPts.size();
     std::vector<cv::Point2d> newPts;
     for (int i = 0; i < n; ++i) {
@@ -29,13 +29,12 @@ Elements polygon(const cv::Point2d& center, const cv::Point2d& a, int n, int dep
     auto degDelta = (360.0 / n) / 180.0 * CV_PI;
 
     for (int i = 0; i < n; ++i) {
-        pts.emplace_back(center.x - r * std::cos(deg), center.y - r * std::sin(deg));
-        std::cout << *(end(pts)-1) << std::endl;
+        pts.push_back({center.x - r * std::cos(deg), center.y - r * std::sin(deg)});
         deg += degDelta;
     }
 
     Elements elements;
-    gen_(elements, pts, depth, ratio);
+    gen_(elements, pts, depth - 1, ratio);
     elements.emplace_back(std::make_shared<Polygon>(std::move(pts)));
 
     return elements;
