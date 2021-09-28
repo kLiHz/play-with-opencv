@@ -1,6 +1,4 @@
-#include <iostream>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
+#include "methods.hpp"
 
 void draw_by_pts(cv::Mat canvas, std::vector<cv::Point2d> pts) {
     auto n = pts.size();
@@ -51,26 +49,3 @@ cv::Mat polygon(cv::Size size, cv::Point2d center, cv::Point2d a, int n, int dep
 
     return canvas;
 }
-
-int main(int argc, char* argv[]) {
-    int n = 6, depth = 10;
-    double ratio = 0.2;
-
-    if (argc > 1) {
-        n = std::stoi(argv[1]);
-        if (argc > 2) {
-            depth = std::stoi(argv[2]);
-            if (argc > 3) {
-                ratio = std::stod(argv[3]);
-            }
-        }
-    }
-    
-    auto pic = polygon(cv::Size(1000, 1000), cv::Point2d(500, 500), cv::Point2d(100, 250), n, depth, ratio);
-    std::string windowName = "Polygon";
-    cv::namedWindow(windowName, cv::WINDOW_NORMAL);
-    cv::imshow(windowName, pic);
-    cv::imwrite(windowName + ".png", pic);
-    cv::waitKey();
-}
-​
