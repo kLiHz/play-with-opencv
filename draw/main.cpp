@@ -4,9 +4,9 @@
 
 int main(int argc, char* argv[]) {
 
-    putenv("QT_AUTO_SCREEN_SCALE_FACTOR=1");
+    _putenv("QT_AUTO_SCREEN_SCALE_FACTOR=1");
 
-    cv::Size size{1000, 1000};
+    cv::Size size{500, 500};
     cv::Mat pic(size, CV_8UC4);
     pic = 0;
 
@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
             n = 23;
         }
 
-        elements = flower({50, 50}, 900, n);
+        elements = flower({25, 25}, 450, n);
     } 
     else if (command == "polygon") {
         int n = 6, depth = 18;
@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
                 }
             }
         }
-        elements = polygon({500, 500}, {100, 260}, n, depth, ratio);
+        elements = polygon({250, 250}, {50, 130}, n, depth, ratio);
         
     }
     else {
@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
         svgToStream(ofs, size, elements);
         ofs.close();
     } else {
-        std::cerr << std::format("Unable to open {}.\n", command + ".svg");
+        std::cerr << fmt::format("Unable to open {}.\n", command + ".svg");
     }
 
     for (const auto& e : elements) {

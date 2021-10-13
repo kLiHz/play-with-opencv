@@ -1,11 +1,11 @@
 #include "elements.hpp"
 
 std::string Polygon::toSvgElement() {
-    return R"(<polygon fill="none" stroke="red" stroke-width="1" points=")" +
+    return R"(<polygon fill="none" points=")" +
            std::accumulate(
                    begin(pts), end(pts), std::string(""),
                    [](std::string s, const cv::Point2d& p){
-                       return std::move(s) + std::format("{:.2f}, {:.2f} ", p.x, p.y);}) + "\"/>";
+                       return std::move(s) + fmt::format("{:.2f}, {:.2f} ", p.x, p.y);}) + "\"/>";
 }
 
 void Polygon::drawOn(cv::Mat canvas) {
@@ -17,8 +17,8 @@ void Polygon::drawOn(cv::Mat canvas) {
 }
 
 std::string Line::toSvgElement() {
-    return std::format(
-            R"(<line x1="{:.2f}" x2="{:.2f}" y1="{:.2f}" y2="{:.2f}" stroke="red" stroke-width="1"/>)",
+    return fmt::format(
+            R"(<line x1="{:.2f}" x2="{:.2f}" y1="{:.2f}" y2="{:.2f}"/>)",
             x.x, y.x, x.y, y.y);
 }
 

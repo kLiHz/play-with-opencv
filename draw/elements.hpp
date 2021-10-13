@@ -1,6 +1,6 @@
+#include <fmt/core.h>
 #include <iosfwd>
 #include <string>
-#include <format>
 #include <numeric>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
@@ -35,18 +35,23 @@ using Elements = std::vector<std::shared_ptr<Element>>;
 inline std::string toSvg(cv::Size size, Elements v) {
     std::string header = R"(<svg version="1.1" width="{}" height="{}" xmlns="http://www.w3.org/2000/svg">)";
     std::string ending = "</svg>";
-    return std::format(header, size.width, size.height) +
+    return fmt::format(header, size.width, size.height) +
+        R"(<g stroke="gray" stroke-width="1">)" +
         std::accumulate(begin(v), end(v), std::string(""), [](std::string s, std::shared_ptr<Element> e) {
             return std::move(s) + e->toSvgElement();
-        }) + ending;
+        }) +
+        R"(</g>)" +
+        ending;
 }
 
 inline void svgToStream(std::ostream& o, cv::Size size, Elements v) {
     std::string header = R"(<svg version="1.1" width="{}" height="{}" xmlns="http://www.w3.org/2000/svg">)";
     std::string ending = "</svg>";
-    o << std::format(header, size.width, size.height);
-    o << std::accumulate(
-        begin(v), end(v), std::string(""), [](std::string s, std::shared_ptr<Element> e) {
-            return std::move(s) + e->toSvgElement();});
+    o << fmt::format(header, size.width, size.height);
+    o << R"(<g stroke="gray" stroke-width="1">)";
+    o << std::accumulate(begin(v), end(v), std::string(""), [](std::string s, std::shared_ptr<Element> e) {
+        return std::move(s) + e->toSvgElement();
+    });
+    o << R"(</g>)";
     o << ending;
 }
