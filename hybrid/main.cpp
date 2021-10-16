@@ -76,12 +76,14 @@ int main(int argc, char *argv[])
         "{@image1   |<none> | First image's path               }"
         "{@image2   |<none> | Second image's path              }"
         "{@image3   |out.png| Hybrid image's path              }"
-        "{layers n  |3      | Max pyramid level; default to 3  }"
-        "{visual    |       | Use imshow to visualize pyramids }"
-        "{verbose   |       | Write out layers of pyramids     }";
+        "{a weight  |0.5    | Weight of image_1; default 0.5   }"
+        "{n layers  |3      | Max pyramid level; default to 3  }"
+        "{gray      |       | Run on a single channel          }"
+        "{visual    |       | Use imshow to visualize result   }"
+        "{verbose   |       | Write(& view) layers of pyramids }";
     
     cv::CommandLineParser parser(argc, argv, keys);
-    parser.about("Image hybrid v1.0.0");
+    parser.about("Image hybrid v1.0.2");
 
     if (parser.has("help")) {
         parser.printMessage();
@@ -90,7 +92,11 @@ int main(int argc, char *argv[])
 
     auto n = parser.get<int>("n");          // Max layer level
     auto verbose = parser.has("verbose");   // Write out layers of pyramids
-    auto visual = parser.has("visual");     // Use imshow to visualize pyramids
+    auto visual = parser.has("visual");     // Use imshow to visualize result
+    auto gray = parser.has("gray");         // Run on a single channel
+
+    auto a = parser.get<double>("a");
+    auto b = 1 - a;
 
     auto imgPath1 = parser.get<std::string>("@image1");
     auto imgPath2 = parser.get<std::string>("@image2");
@@ -104,10 +110,11 @@ int main(int argc, char *argv[])
 
     std::cout 
         << std::boolalpha
-        << "Max layer number: " << n << "\n"
-        << "Total pyramid layers: " << n + 1 << "\n"
-        << "Write out layers of pyramids: " << verbose << "\n"
-        << "Use imshow to visualize pyramids: " << visual << "\n";
+        << fmt::format("- Weight: a: {:.2f}; b: {:.2f}\n", a, b)
+        << "- Max layer number:     " << n << "\n"
+        << "- Total pyramid layers: " << n + 1 << "\n"
+        << "- Write(& view) layers of pyramids: " << verbose << "\n"
+        << "- Use 'imshow' to visualize result: " << visual << "\n";
 
     auto img1 = cv::imread(imgPath1);
     auto img2 = cv::imread(imgPath2);
@@ -122,7 +129,18 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    std::cout << imgPath1 << ": " << img1.size() << "\n";
+    std::cout << imgPath2 << ": " << img2.size() << "\n";
+
     std::cout << "Image loaded successfully." << std::endl;
+
+    if (img1.size() != img2.size()) {
+        std::cout << "Input image sizes don't match. Try resizing." << std::endl;
+        cv::resize(img2, img2, img1.size());
+        std::cout << "size of img1: " << img1.size() << "\n";
+        std::cout << "size of img2: " << img2.size() << "\n";
+        std::cout << std::flush;
+    }
 
     cv::Mat result;
 
@@ -149,13 +167,14 @@ int main(int argc, char *argv[])
         }
     };
 
-    if (img1.channels() != img2.channels()) {
-        if (img1.channels() != 1) {
+    if (gray || (img1.channels() != img2.channels())) {
+        if (img1.channels() != 1 || img2.channels() != 1) {
             cv::cvtColor(img1, img1, cv::COLOR_BGR2GRAY);
             cv::cvtColor(img2, img2, cv::COLOR_BGR2GRAY);
         }
-        auto [result, L1, L2] = getLinearHybridImage(img1, 0.5, img2, 0.5, n);
-        if (visual) viewLapPyr(L1, L2);
+        auto [t, L1, L2] = getLinearHybridImage(img1, a, img2, b, n);
+        result = t;
+        if (visual && verbose) viewLapPyr(L1, L2);
         if (verbose) wirteOutLapPyr(L1, L2);
     } else {
         std::vector<cv::Mat> split1, split2, split3;
@@ -163,9 +182,9 @@ int main(int argc, char *argv[])
         cv::split(img2, split2);
         split3.resize(img1.channels());
         for (int i = 0; i < split1.size(); ++i) {
-            auto [a, L1, L2] = getLinearHybridImage(split1[i], 0.5, split2[i], 0.5, n);
-            split3[i] = a;
-            if (visual) viewLapPyr(L1, L2, fmt::format("Channel {}:", i));
+            auto [t, L1, L2] = getLinearHybridImage(split1[i], a, split2[i], b, n);
+            split3[i] = t;
+            if (visual && verbose) viewLapPyr(L1, L2, fmt::format("Channel {}:", i));
         }
         cv::merge(split3, result);
         
@@ -175,7 +194,7 @@ int main(int argc, char *argv[])
         // Got L1, L2 from GRAY image; compromised solution
         cv::cvtColor(img1, img1, cv::COLOR_BGR2GRAY);
         cv::cvtColor(img2, img2, cv::COLOR_BGR2GRAY);
-        auto [r, L1, L2] = getLinearHybridImage(img1, 0.5, img2, 0.5, n);
+        auto [r, L1, L2] = getLinearHybridImage(img1, a, img2, b, n);
         if (verbose) wirteOutLapPyr(L1, L2);
     }
 
@@ -186,6 +205,7 @@ int main(int argc, char *argv[])
         cv::destroyAllWindows();
     }
 
+    std::cout << "Writing out result image to '" << imgPath3 << "'.\n";
     cv::imwrite(imgPath3, result);
     return 0;
 }
