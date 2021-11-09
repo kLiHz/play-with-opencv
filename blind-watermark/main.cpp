@@ -156,6 +156,7 @@ int main(int argc, char * argv[]) {
     std::cout << "Image loaded successfully." << std::endl;
 
     if (img.type() == CV_8UC3) cv::cvtColor(img, img, cv::COLOR_BGR2GRAY);
+    if (img.type() == CV_8UC4) cv::cvtColor(img, img, cv::COLOR_BGRA2GRAY);
 
     auto dft_img = getDFT(img); // dft_img is a complex_image (2 channels, real and imagine parts)
 
@@ -195,7 +196,9 @@ int main(int argc, char * argv[]) {
         cv::Mat watermark;
         cv::resize(text_image, watermark, wm_size);
 
+        watermark += cv::Scalar::all(1);
         cv::exp(watermark, watermark);
+        watermark *= 10;
 
         cv::Mat modified_mag;
         magnitude.copyTo(modified_mag);
